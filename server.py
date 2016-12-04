@@ -17,7 +17,7 @@ db = flask_sqlalchemy.SQLAlchemy(app)
 class Person(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode)
-    birth_date = db.Column(db.Date)
+    age = db.Column(db.Integer)
 
 
 class Article(db.Model):
@@ -28,8 +28,9 @@ class Article(db.Model):
     author = db.relationship(Person, backref=db.backref('articles',
                                                         lazy='dynamic'))
 
-class KerasData(db.Model):
+class kerasdata(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    epoch = db.Column(db.Integer)
     data = db.Column(db.Text)
     
 # Create the database tables.
@@ -43,7 +44,7 @@ manager = flask_restless.APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(Person, methods=['GET', 'POST', 'DELETE'])
 manager.create_api(Article, methods=['GET'])
 
-manager.create_api(KerasData, methods=['GET', 'POST'])
+manager.create_api(kerasdata, methods=['GET', 'POST'])
 
 # start the flask loop
 app.run(host='0.0.0.0')
