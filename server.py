@@ -28,7 +28,10 @@ class Article(db.Model):
     author = db.relationship(Person, backref=db.backref('articles',
                                                         lazy='dynamic'))
 
-
+class KerasData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.Text)
+    
 # Create the database tables.
 db.create_all()
 
@@ -39,6 +42,8 @@ manager = flask_restless.APIManager(app, flask_sqlalchemy_db=db)
 # default. Allowed HTTP methods can be specified as well.
 manager.create_api(Person, methods=['GET', 'POST', 'DELETE'])
 manager.create_api(Article, methods=['GET'])
+
+manager.create_api(KerasData, methods=['GET', 'POST'])
 
 # start the flask loop
 app.run(host='0.0.0.0')
