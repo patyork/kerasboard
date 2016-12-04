@@ -32,6 +32,10 @@ class kerasdata(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     epoch = db.Column(db.Integer)
     data = db.Column(db.Text)
+    acc = db.Column(db.Float)
+    loss = db.Column(db.Float)
+    val_acc = db.Column(db.Float)
+    val_loss = db.Column(db.Float)
     
 # Create the database tables.
 db.create_all()
