@@ -14,7 +14,11 @@ def post_preprocessor(data=None, **kw):
     fields to set on the new instance of the model.
 
     """
-    print data, kw
+    print '================================'
+    print 'Data:', data
+    print '\tType Of:' type(data)
+    print 'kw:', kw
+    print '\tType Of:', type(kw)
     pass
 
 
