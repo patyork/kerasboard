@@ -49,7 +49,7 @@ manager = flask_restless.APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(Person, methods=['GET', 'POST', 'DELETE'])
 manager.create_api(Article, methods=['GET'])
 
-manager.create_api(kerasdata, methods=['GET', 'POST'],  preprocessors={'POST':[post_preprocessor]})
+manager.create_api(kerasdata, methods=['GET', 'POST'])
 
 # start the flask loop
 app.run(host='0.0.0.0')
