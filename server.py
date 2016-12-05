@@ -16,9 +16,10 @@ def post_preprocessor(data=None, **kw):
     """
     print '================================'
     print 'Data:', data
-    print '\tType Of:' type(data)
+    print '\tType Of:' typeof(data)
     print 'kw:', kw
-    print '\tType Of:', type(kw)
+    print '\tType Of:', typeof(kw)
+    print kw[0]
     pass
 
 
