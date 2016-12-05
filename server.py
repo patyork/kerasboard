@@ -9,19 +9,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
 db = flask_sqlalchemy.SQLAlchemy(app)
 
-def post_preprocessor(data=None, **kw):
-    """Accepts a single argument, `data`, which is the dictionary of
-    fields to set on the new instance of the model.
-
-    """
-    print '================================'
-    print 'Data:', data
-    print '\tType Of:', type(data)
-    print 'kw:', kw
-    print '\tType Of:', type(kw)
-    print kw[0]
-    pass
-
 
 # Create your Flask-SQLALchemy models as usual but with the following
 # restriction: they must have an __init__ method that accepts keyword
