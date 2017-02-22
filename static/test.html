@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>tornado WebSocket example</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="lib/angular.min.js"></script>
+    <script src="lib/angular-websocket.min.js"></script>
+    <script src="lib/highcharts.js"></script>
+    <script src="lib/highcharts-ng.min.js"></script>
+
+    <link rel="stylesheet" href="lib/styles.css" />
+
+</head>
+<body ng-app="YOUR_APP" ng-controller="SomeController">
+<div>
+    <div>{{chartConfig.getChartObj().chartHeight}}</div>
+
+    <highchart id="chart1" config="chartConfig" class="span9" ></highchart>
+    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart>
+    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart>
+
+</div>
+<script>
+    angular.module('YOUR_APP', ['ngWebSocket',
+        //'chart.js',
+        'highcharts-ng'])
+            .factory('MyData', function($websocket) {
+                // Open a WebSocket connection
+                var dataStream = $websocket('ws://' + window.location.host + '/ws');
+
+                var collection = [];
+                var datum = {labels: [], values:[]};
+                var datum2 = {val:[]};
+                dataStream.onMessage(function(message) {
+                    parsed = JSON.parse(message.data);
+
+                    if (parsed.constructor === Array){
+                        toadd_l = [];
+                        toadd_v = [];
+                        for (a in parsed){
+
+                            tmp = JSON.parse(parsed[a]);
+
+                            toadd_l.push(tmp.id);
+                            toadd_v.push(tmp.value);
+                        }
+                        datum.labels = (datum.labels.concat(toadd_l)).slice(-10);
+                        datum.values = (datum.values.concat(toadd_v)).slice(-10);
+
+                        datum2.val = [].concat(toadd_v)
+
+                    }
+                    else {
+                        datum.labels.push(parsed.id);
+                        datum.values.push(parsed.value);
+
+                        datum2.val = [JSON.parse(parsed.value)];
+
+                    }
+                });
+
+                var methods = {
+                    collection: collection,
+                    datum: datum,
+                    datum2: datum2,
+                    get: function() {
+                        dataStream.send(JSON.stringify({ action: 'get' }));
+                    }
+                };
+
+                return methods;
+            })
+            .controller('SomeController', function ($scope, MyData) {
+                $scope.MyData = MyData;
+
+                function clone(obj) {
+                    var copy;
+
+                    // Handle the 3 simple types, and null or undefined
+                    if (null == obj || "object" != typeof obj) return obj;
+
+                    // Handle Date
+                    if (obj instanceof Date) {
+                        copy = new Date();
+                        copy.setTime(obj.getTime());
+                        return copy;
+                    }
+
+                    // Handle Array
+                    if (obj instanceof Array) {
+                        copy = [];
+                        for (var i = 0, len = obj.length; i < len; i++) {
+                            copy[i] = clone(obj[i]);
+                        }
+                        return copy;
+                    }
+
+                    // Handle Object
+                    if (obj instanceof Object) {
+                        copy = {};
+                        for (var attr in obj) {
+                            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+                        }
+                        return copy;
+                    }
+
+                    throw new Error("Unable to copy obj! Its type isn't supported.");
+                }
+
+                $scope.$watch('MyData', function(new_val, old_val){
+
+                    // Main
+                    var seriesArray = $scope.chartConfig.series;
+                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val);
+
+                    // Middle
+                    var seriesArray = $scope.chartConfig2.series;
+                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-100);
+
+                    // Last
+                    var seriesArray = $scope.chartConfig3.series;
+                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-10);
+
+
+                }, true);
+                $scope.chartSeries = [
+                    {"name": "Loss", "data": [], id: 'loss'},
+                    {"name": "Metric", "data": [], connectNulls: true, id: 'metric'},
+                ];
+                $scope.chartConfig = {
+
+                    chart: {
+                        type: 'line',
+                        height: 300,
+                    },
+                    plotOptions: {
+                        series: {
+                            stacking: ''
+                        }
+                    },
+                    series: $scope.chartSeries,
+                    title: {
+                        text: 'Epoch'
+                    }
+                };
+
+                $scope.chartConfig2 = clone($scope.chartConfig);
+                $scope.chartConfig2.title.text = 'Last 1000 Batches (Averaged over 10)';
+                $scope.chartConfig3 = clone($scope.chartConfig);
+                $scope.chartConfig2.title.text = 'Last 100 Batches';
+
+
+                $scope.reflow = function () {
+                    $scope.$broadcast('highchartsng.reflow');
+                };
+            });
+</script>
+</body>
+</html>

@@ -2,8 +2,11 @@
 <html>
 <head>
   <title>tornado WebSocket example</title>
-  <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
   <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  
+  <script src="lib/angular-websocket.min.js"></script>
+
 </head>
 <body>
   <div class="container">
@@ -68,20 +71,13 @@
     <h3>REST API examples</h3>
     <ol>
       <li>Set the "id 1" value to 100
-        <ul><li>curl "http://hiroakis.com:8888/api?id=1&amp;value=100"</li></ul>
-      </li>
-      <li>Set the "id 1" value to 300 ( The row No 1 will change to yellow )
-        <ul><li>curl "http://hiroakis.com:8888/api?id=1&amp;value=300"</li></ul>
-      </li>
-      <li>Set The "id 1" value to 600 ( The row No 1 will change to red )
-        <ul><li>curl "http://hiroakis.com:8888/api?id=1&amp;value=600"</li></ul>
+        <ul><li>curl "http://localhost:8888/api?id=1&amp;value=100"</li></ul>
       </li>
     </ol>
     <ul>
       <li>value 201 - 500 : change to yellow</li>
       <li>value 501 - : change to red</li>
     </ul>
-    <img src="./rest_api_example.png"/>
   </div>
   <script>
     var host = window.location.host;
