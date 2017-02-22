@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - trackball controls</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            color: #000;
+            font-family:sans-serif;
+            font-size:13px;
+            text-align:center;
+            font-weight: bold;
+
+            background-color: #fff;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        #info {
+            color:#000;
+            position: absolute;
+            top: 0px; width: 100%;
+            padding: 5px;
+
+        }
+
+        .graph {
+            display: inline-block;
+            margin: 0 auto;
+        }
+
+        a {
+            color: red;
+        }
+    </style>
+    <style type="text/css">
+        .grid-stack {
+            z-index: 9999;
+            width: 100%;
+            position: static !important;
+        }
+        .grid-stack-item-content {
+            color: #2c3e50;
+            text-align: left;
+            background-color: #dbdbdb;
+            border: dashed #c9c9c9 2px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+</head>
+
+<body ng-app="GridStack" ng-controller="DemoCtrl">
+<laser-canvas id="container" image-upload="selected_file.name" image-data="imageData"></laser-canvas>
+<div id="info">
+    Mouse + Left: Rotate | Scroll Wheel: Zoom | Mouse + Right: Pan | Keyboard "R": Reset View
+</div>
+
+
+
+<div gridstack-handler="gridstacker" gridstack class="grid-stack" options="options" on-change="onChange(event,items)" on-drag-start="onDragStart(event,ui)" on-drag-stop="onDragStop(event,ui)" on-resize-start="onResizeStart(event,ui)" on-resize-stop="onResizeStop(event,ui)">
+    <div gridstack-item ng-repeat="w in widgets" class="grid-stack-item" gs-item-x="w.x" gs-item-y="w.y"
+         gs-item-width="w.width" gs-item-height="w.height" gs-item-autopos="0" on-item-added="onItemAdded(item)" on-item-removed="onItemRemoved(item)">
+        <div class="grid-stack-item-content">
+            <div ng-if="w.id==='file'">
+                <h4>Workspace</h4>
+                <div class="input-group">
+                    <label class="input-group-btn">
+                        <span class="btn btn-primary">
+                            Browse&hellip; <input type="file" style="display: none;" ng-upload-change="fileChanged($event)" id="userImage">
+                        </span>
+                    </label>
+                    <input type="text" class="form-control" readonly placeholder="{{selected_file.name}}" />
+                </div>
+                <p>Image Width: {{imageData.width}}px<br />
+                    Image Height: {{imageData.height}}px</p>
+            </div>
+
+            <div ng-if="w.id==='engravingSettings'">
+                <h4>Engraving Settings</h4>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Pixel Width ({{machine.units}}):&nbsp;</div>
+                    <input type="text" class="form-control" id="pixelWidth" ng-model="pixel.width" >
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Pixel Height ({{machine.units}}):</div>
+                    <input type="text" class="form-control" id="pixelHeigtht" ng-model="pixel.height" >
+                </div>
+
+
+                <p>Engraving Width: {{imageData.width * pixel.width | number:4}}{{machine.units}}<br />
+                    Engraving Height: {{imageData.height * pixel.height | number:4}}{{machine.units}}</p>
+            </div>
+
+            <div ng-if="w.id==='laserSettings'">
+                <h4>Laser Settings</h4>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Power Band:</div>
+                    <input type="text" class="form-control" id="powerBand" ng-model="laser.powerBand" ng-change="hey()" >
+                </div>
+                <flot dataset="myData" options="myChartOptions" height="200"></flot>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Power Low (S):</div>
+                    <input type="text" class="form-control" id="powerLow" ng-model="laser.powerLow" >
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Power High (S):</div>
+                    <input type="text" class="form-control" id="powerHigh" ng-model="laser.powerHigh"  >
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Power Off (S):</div>
+                    <input type="text" class="form-control" id="powerOff" ng-model="laser.powerOff"  >
+                </div>
+            </div>
+
+
+
+            <div ng-if="w.id==='machineSettings'">
+                <h4>Machine Settings</h4>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Units:</div>
+                    <select class="form-control" id="units" ng-model="machine.units" >
+                        <option>mm</option>
+                        <option>in</option>
+                    </select>
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Feed Rate ({{machine.units}}/min):</div>
+                    <input type="text" class="form-control" id="feedRate" ng-model="machine.feedRate" >
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Overrun ({{machine.units}}):</div>
+                    <input type="text" class="form-control" id="overrun" ng-model="machine.overrun"  >
+                </div>
+            </div>
+
+            <div ng-if="w.id==='preprocSettings'">
+                <h4>Preprocessing Settings</h4>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    Ignore White?:&nbsp;
+                    <input type="checkbox" class="form-check-input" id="ignoreWhite" ng-model="preproc.ignoreWhite">
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    Split on White?:&nbsp;
+                    <input type="checkbox" class="form-check-input" id="splitWhite" ng-model="preproc.splitWhite">
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">Minimum White size ({{machine.units}}):</div>
+                    <input type="text" class="form-control" id="splitMinimum" ng-model="preproc.splitMin" ng-disabled="!preproc.splitWhite">
+                </div>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">White Cutoff (0 - 255):</div>
+                    <input type="text" class="form-control" id="whiteCutoff" ng-model="preproc.whiteCutoff" >
+                </div>
+            </div>
+
+            <div ng-if="w.id==='stats'">
+                <h4>Stats</h4>
+                <p>Total Distance: {{distance_image() + distance_y() + distance_overrun() | number:2}}{{machine.units}}<br />
+                    Estimate Time: {{estimatedTime() | number:2}} minutes</p>
+            </div>
+
+
+            <div ng-if="w.id==='process'">
+                <h4>Process</h4>
+                <div class="input-group">
+                    <label class="input-group-btn">
+                        <span class="btn btn-primary">
+                            Generate gCode&hellip; <input style="display: none;" id="start_proc" ng-click="generateGcode()">
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="lib/three.js"></script>
+<script src="lib/controls/TrackballControls.js"></script>
+
+<script src="lib/jquery-3.1.1.min.js"></script>
+
+<script src="lib/jquery-ui.min.js"></script>
+<script src="lib/lodash.min.js"></script>
+<link rel="stylesheet" href="css/gridstack.min.css" />
+<script src="lib/jquery.flot.js"></script>
+<script src="lib/angular.min.js"></script>
+<script src="lib/angular-sanitize.min.js"></script> <!--TODO: Remove? -->
+
+<script src="lib/angular-flot.js"></script>
+<script src="lib/gridstack.min.js"></script>
+<script src="lib/gridstack-angular.min.js"></script>
+<script src="lib/parser.js"></script>
+
+<script>
+
+
+
+</script>
+
+<!-- Gridstack -->
+<script type="text/javascript">
+    var app = angular.module('GridStack', ['gridstack-angular', 'ngSanitize', 'angular-flot']).
+            controller('DemoCtrl', function($scope, $log, $sanitize, $http) {
+                $scope.options = {
+                    cellHeight: 40,
+                    verticalMargin: 10,
+                    height: 20,
+                    width: 12,
+                    float: true
+                };
+                $scope.default_widgets = [
+                    { x:0, y:0, width:2, height: 3, id: 'file'},
+                    { x:0, y:3, width:2, height: 4, id: 'engravingSettings'},
+                    { x:0, y:7, width:2, height: 8, id: 'laserSettings'},
+                    { x:0, y:15, width:2, height: 5},
+
+                    { x:10, y:0, width:2, height: 4, id: 'machineSettings'},
+                    { x:10, y:4, width:2, height: 4, id: 'preprocSettings'},
+                    { x:10, y:8, width:2, height: 3, id: 'stats'},
+                    { x:10, y:11, width:2, height: 4, id: 'process'},
+
+                ];
+
+                $scope.gridstacker = null;
+
+                $scope.selected_file = {
+                    name: '(previously loaded)',
+                    location: ''
+                };
+
+                $scope.pixel = {width: 0.2, height: 0.2};
+
+                $scope.laser = {
+                    powerBand: '7.0448*x^5 - 17.159*x^4 + 16.883*x^3 - 8.1055*x^2 + 2.3173*x + 0.0057',
+                    powerLow: 4450,
+                    powerHigh: 8000,
+                    powerOff: 2000
+                };
+                $scope.myData = [{ data: [], yaxis: 1, color: "#337ab7" }];
+                $scope.myChartOptions = {};
+                var parser = new Parser();
+                var expr = parser.parse($scope.laser.powerBand);
+                for (var i = 0; i <= 1; i += 0.01) {
+                    $scope.myData[0].data.push([i, expr.evaluate({x: i})]);
+                }
+
+                $scope.hey = function() {
+                    expr = parser.parse($scope.laser.powerBand);
+
+                    $scope.myData = [{ data: [], yaxis: 1 }];
+                    for (var i = 0; i <= 1; i += 0.01) {
+                        $scope.myData[0].data.push([i, expr.evaluate({x: i})]);
+                    }
+                };
+
+
+                $scope.machine = {
+                    units: 'mm',
+                    feedRate: 500,
+                    overrun: 5
+                };
+
+                $scope.preproc = {
+                    ignoreWhite: true,
+                    splitWhite: false,
+                    splitMin: 12.5,
+                    whiteCutoff: 255
+                };
+
+                $scope.distance_image = function() {
+                    return ($scope.imageData.height * $scope.imageData.width * $scope.pixel.width);
+                };
+
+                $scope.distance_y = function() {
+                    return ($scope.imageData.height * $scope.pixel.height);
+                };
+
+                $scope.distance_overrun = function() {
+                    return 2.0 *$scope.imageData.height * $scope.machine.overrun;
+;                };
+
+                $scope.estimatedTime = function() {
+                    return ($scope.distance_image() + $scope.distance_y()) / $scope.machine.feedRate + //approximation
+                            ($scope.distance_overrun() / ($scope.machine.feedRate / 2.0)) // average speed approximates the accel/decel well
+                };
+
+
+
+
+                $scope.imageData = {data: '', width:0, height:0, size:0};
+                if(localStorage.getItem('last_image')) {
+                    $scope.imageData = angular.fromJson(localStorage.getItem('last_image'));
+                    //$scope.imageData.data = localStorage.getItem('last_image');
+                }
+
+                if(localStorage.getItem('last_layout')) {
+                    $scope.widgets = angular.fromJson(localStorage.getItem('last_layout'));
+                }
+                else {
+                    $scope.widgets = $scope.default_widgets;
+                }
+
+                $scope.reset_layout = function() {
+                    $scope.widgets = $scope.default_widgets;
+                    $scope.saveLayout();
+                };
+                $scope.widgets = $scope.default_widgets; //# todo remove
+
+
+                $scope.saveLayout = function() {
+                    localStorage.setItem('last_layout', angular.toJson($scope.widgets));
+                };
+
+                $scope.fileChanged = function($event) {
+                    $scope.selected_file.name = $event.target.files[0].name;
+
+                    console.log($event.target.files[0]);
+
+                    var reader  = new FileReader();
+
+                    reader.onloadend = function () {
+
+                       $http.post('project/upload', angular.toJson({the_file: reader.result}), {
+                            //withCredentials: true,
+                            headers: {'Content-Type': undefined },
+                            transformRequest: angular.identity
+                        }).then(function successCallback(response) {
+                            console.log(response);
+                          }, function errorCallback(response) {
+                            console.log('not cool');
+                          });
+
+                    };
+
+                    if ($event.target.files[0]) {
+                        reader.readAsDataURL($event.target.files[0]); //reads the data as a URL
+                    } else {
+                    }
+
+
+                };
+
+
+                $scope.generateGcode = function() {
+                    payload = {
+                        engraving: $scope.pixel,
+                        laser: $scope.laser,
+                        machine: $scope.machine,
+                        preprocessing: $scope.preproc
+                    };
+
+                    $http.post('project/settings', angular.toJson(payload), {
+                        //withCredentials: true,
+                        headers: {'Content-Type': 'application/json' },
+                        transformRequest: angular.identity
+                    }).then(function successCallback(response) {
+                        console.log(response);
+                    }, function errorCallback(response) {
+                        console.log('not cool - on gCode creation');
+                    });
+
+                };
+
+
+                $scope.addWidget = function() {
+                    var newWidget = { x:0, y:0, width:1, height:1 };
+                    $scope.widgets.push(newWidget);
+                };
+                $scope.removeWidget = function(w) {
+                    var index = $scope.widgets.indexOf(w);
+                    $scope.widgets.splice(index, 1);
+                };
+                $scope.onChange = function(event, items) {
+                    $log.log("onChange event: "+event+" items:"+items);
+                };
+                $scope.onDragStart = function(event, ui) {
+                    $log.log("onDragStart event: "+event+" ui:"+ ui);
+                };
+                $scope.onDragStop = function(event, ui) {
+                    $log.log("onDragStop event: "+event+" ui:"+ui);
+                    $scope.saveLayout();
+                };
+                $scope.onResizeStart = function(event, ui) {
+                    $log.log("onResizeStart event: "+event+" ui:"+ui);
+                };
+                $scope.onResizeStop = function(event, ui) {
+                    $log.log("onResizeStop event: "+event+" ui:"+ui);
+                    $scope.saveLayout();
+                };
+                $scope.onItemAdded = function(item) {
+                    $log.log("onItemAdded item: "+item);
+                    $scope.saveLayout();
+                };
+                $scope.onItemRemoved = function(item) {
+                    $log.log("onItemRemoved item: "+item);
+                    $scope.saveLayout();
+                };
+
+
+            }).
+            directive("ngUploadChange",function(){
+                return{
+                    scope:{
+                        ngUploadChange:"&"
+                    },
+                    link:function($scope, $element, $attrs){
+                        $element.on("change",function(event){
+                            $scope.ngUploadChange({$event: event})
+                        })
+                        $scope.$on("$destroy",function(){
+                            $element.off();
+                        });
+                    }
+                }
+            }).
+            directive(
+            "laserCanvas",
+            [function () {
+                return {
+                    restrict: "E",
+                    scope: {
+                        imageUpload: "=imageUpload",
+                        imageData: "=imageData"
+                    },
+                    link: function (scope, elem, attr) {
+                        var container, stats;
+
+                        var camera, controls, scene, renderer;
+                        var removable_items = [];
+
+                        var cross;
+
+                        var uploadedImage = document.createElement( 'img' ); // Placeholder for texture
+
+                        init();
+                        animate();
+
+                        scope.$watch("imageUpload", function(newValue, oldValue) {
+                            if (newValue != oldValue) {
+                                streamFileToBuffer();
+                            }
+
+                        });
+
+                        function streamFileToBuffer(){
+                            var file    = document.querySelector('input[type=file]').files[0]; //sames as here
+                            console.log(file);
+                            var reader  = new FileReader();
+
+                            reader.onloadend = function () {
+                                uploadedImage.src = reader.result;
+
+                                applyTexture();
+
+                                //localStorage.setItem('last_image', uploadedImage.src);
+
+                                scope.imageData.data = uploadedImage.src;
+                                scope.imageData.size = file.size;
+
+                                localStorage.setItem('last_image', angular.toJson(scope.imageData));
+
+                                scope.$apply();
+
+                            };
+
+                            if (file) {
+                                reader.readAsDataURL(file); //reads the data as a URL
+                            } else {
+                                uploadedImage.src = "";
+                            }
+                        }
+
+                        function applyTexture() {
+                            var texture = new THREE.Texture(uploadedImage);
+                            texture.needsUpdate = true;
+                            texture.minFilter = THREE.LinearFilter;
+
+                            scope.imageData.width = texture.image.width;
+                            scope.imageData.height = texture.image.height;
+
+                            var material = new THREE.MeshLambertMaterial({map: texture});
+                            var geometry = new THREE.BoxGeometry( texture.image.width/10.0, texture.image.height/10.0,0 );
+
+                            // Reverse back face - make it appear as a 2D iamge floating in 3D space
+                            geometry.faceVertexUvs[0][2] =  [new THREE.Vector2(1,1), new THREE.Vector2(1, 0), new THREE.Vector2(0, 1)];
+                            geometry.faceVertexUvs[0][3] =  [new THREE.Vector2(1,0), new THREE.Vector2(0, 0), new THREE.Vector2(0, 1)];
+
+                            var cube = new THREE.Mesh( geometry, material );
+
+                            cube.position.z = 0.2; // run up a bit, so the axes don't interfere with the display of the rectangle
+                            scene.remove(removable_items.pop());
+
+                            removable_items.push(cube);
+                            scene.add( cube );
+                            render();
+                        }
+
+
+                        function init() {
+                            camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1500 );
+                            camera.position.z = 200;
+
+                            controls = new THREE.TrackballControls( camera );
+
+                            console.log(camera.position);
+
+                            controls.rotateSpeed = 1.0 * 10;
+                            controls.zoomSpeed = 1.8 * 10;
+                            controls.panSpeed = 0.8 * 10;
+
+                            controls.noZoom = false;
+                            controls.noPan = false;
+
+                            controls.staticMoving = true;
+                            controls.dynamicDampingFactor = 0.3;
+
+                            controls.keys = [ 65, 83, 68 ];
+
+                            controls.addEventListener( 'change', render );
+
+
+                            // world
+                            scene = new THREE.Scene();
+
+                            var geometry = new THREE.CylinderGeometry( 0, 10, 30, 4, 1 );
+                            var material;
+
+                            // axes
+                            axes = new THREE.AxisHelper( 1000 );
+                            scene.add( axes );
+
+
+
+
+                            // lights
+                            light = new THREE.DirectionalLight( 0xffffff );
+                            light.position.set( 1, 1, 1 );
+                            scene.add( light );
+
+                            light = new THREE.DirectionalLight( 0xffffff );
+                            light.position.set( -1, -1, -1 );
+                            scene.add( light );
+
+                            light = new THREE.AmbientLight( 0xffffff );
+                            scene.add( light );
+
+
+                            // renderer
+                            renderer = new THREE.WebGLRenderer( { antialias: false } );
+                            //renderer.setClearColor( scene.fog.color );
+                            renderer.setClearColor( '#f2f2f2' );
+                            renderer.setPixelRatio( window.devicePixelRatio );
+                            renderer.setSize( window.innerWidth, window.innerHeight );
+
+                            container = document.getElementById( 'container' );
+                            container.appendChild( renderer.domElement );
+
+                            //stats = new Stats();
+                            //container.appendChild( stats.dom );
+
+                            //
+
+                            window.addEventListener( 'resize', onWindowResize, false );
+                            //
+
+                            if(localStorage.getItem('last_image')) {
+                                scope.imageData = angular.fromJson(localStorage.getItem('last_image'));
+                                uploadedImage.src = scope.imageData.data;
+
+                                applyTexture();
+                            }
+                            else {
+                                var loader = new THREE.TextureLoader();
+                                // URL of texture
+                                loader.load("boxtexture.jpg", function (texture) {
+                                    material = new THREE.MeshLambertMaterial({map: texture});
+
+                                    geometry = new THREE.BoxGeometry(texture.image.width / 10.0, texture.image.height / 10.0, .0001);
+                                    var cube = new THREE.Mesh(geometry, material);
+
+                                    cube.position.z = 0.2;
+                                    scene.add(cube);
+
+                                    removable_items.push(cube);
+
+                                    render();
+                                });
+                            }
+
+                            render();
+                        }
+
+                        function onWindowResize() {
+                            camera.aspect = window.innerWidth / window.innerHeight;
+                            camera.updateProjectionMatrix();
+
+                            renderer.setSize( window.innerWidth, window.innerHeight );
+
+                            controls.handleResize();
+
+                            render();
+                        }
+
+                        function animate() {
+                            requestAnimationFrame( animate );
+                            controls.update();
+                        }
+
+                        function render() {
+                            renderer.render( scene, camera );
+                            //stats.update();
+                        }
+
+                    }
+                }
+            }
+            ]);;
+</script>
+
+
+</body>
+</html>
