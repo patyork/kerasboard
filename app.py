@@ -75,12 +75,31 @@ class ApiHandler(web.RequestHandler):
     def post(self):
         pass
 
+class ApiHandler2(web.RequestHandler):
+
+    @web.asynchronous
+    def get(self, *args):
+        self.finish()
+        values = self.get_argument("values")
+
+        datas = []
+        for value in values:
+            datas.append(json.dumps({"id": 0, "value": value}))
+        data = json.dumps(datas)
+        for c in cl:
+            c.write_message(data)
+
+    @web.asynchronous
+    def post(self):
+        pass
+
 app = web.Application([
     (r'/', IndexHandler),
     (r"/(.*\.html)", web.StaticFileHandler, dict(path='./static/')),
     (r"/lib/(.*\.(js|map|css))", web.StaticFileHandler, dict(path='./static/lib/')),
     (r'/ws', SocketHandler),
     (r'/api', ApiHandler),
+    (r'/api2', ApiHandler2),
 ])
 
 def usage():
