@@ -1,6 +1,7 @@
 from tornado import websocket, web, ioloop
 import json
 import numpy as np
+import sys, getopt
 
 import sqlite3
 conn = sqlite3.connect(':memory:')
@@ -82,7 +83,25 @@ app = web.Application([
     (r'/api', ApiHandler),
 ])
 
+def usage():
+    print('''-h --help : This screen\n-p --port = Port to listen on''')
+
 if __name__ == '__main__':
-    app.listen(8888)
+    port = 8888
+
+    argv = sys.argv[1:]
+    try:
+        opts, args = getopt.getopt(argv, "hp", ["help", "port="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-p", "--port"):
+            port = arg
+
+    app.listen(port)
     tmp_index = initialize_db(tmp_index)
     ioloop.IOLoop.instance().start()
