@@ -3,6 +3,7 @@ import json
 import numpy as np
 import sys
 import getopt
+import socket
 
 import sqlite3
 conn = sqlite3.connect(':memory:')
@@ -123,14 +124,16 @@ app = web.Application([
 ])
 
 def usage():
-    print('''-h --help : This screen\n-p --port = Port to listen on''')
+    print(
+        '-h --help\tThis screen\n'
+        '--port=\tPort to listen on')
 
 if __name__ == '__main__':
     port = 8888
 
     argv = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv, "hp", ["help", "port="])
+        opts, args = getopt.getopt(argv, "h", ["help", "port="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -138,9 +141,13 @@ if __name__ == '__main__':
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif opt in ("-p", "--port"):
-            port = arg
-
-    app.listen(port)
+        elif opt in ("--port"):
+            port = int(arg)
+    try:
+        app.listen(port)
+        print('Listening on:\n\thttp://localhost:{0}/\n\tws://localhost:{1}/ws'.format(port, port))
+    except socket.error as e:
+        print('Port {0} is already in use. Please select a different port via the `--port=` flag.'.format(port))
+        sys.exit(-1)
     tmp_index = initialize_db(tmp_index)
     ioloop.IOLoop.instance().start()
