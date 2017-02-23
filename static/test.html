@@ -116,11 +116,11 @@
 
                     // Middle
                     var seriesArray = $scope.chartConfig2.series;
-                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-100);
+                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-1000);
 
                     // Last
                     var seriesArray = $scope.chartConfig3.series;
-                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-10);
+                    seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-100);
 
 
                 }, true);
