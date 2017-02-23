@@ -4,11 +4,11 @@ import numpy as np
 
 import time
 def usage():
-    print('''-h --help : This screen\n-p --port = Port to listen on''')
+    print('''-h --help : This screen\n-p --port = Port to listen on\n-d --delay = delay in milliseconds''')
 
 if __name__ == '__main__':
     port = 8888
-    delay = 1.0
+    delay = 1000
 
     argv = sys.argv[1:]
     try:
@@ -23,15 +23,15 @@ if __name__ == '__main__':
         elif opt in ("-p", "--port"):
             port = arg
         elif opt in ("-d", "--delay"):
-            delay = arg
+            delay = float(arg)
 
     id = 50
     while True:
         try:
             r = requests.get('http://localhost:%s/api' % port, params={'id': id, 'value': np.random.random() * 1000})
-            time.sleep(delay)
+            time.sleep(delay / 1000)
         except requests.ConnectionError:
-            time.sleep(delay*5)
+            time.sleep(delay*5. / 1000.)
 
         id += 1
 
