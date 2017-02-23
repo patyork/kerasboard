@@ -73,7 +73,20 @@ class ApiHandler(web.RequestHandler):
 
     @web.asynchronous
     def post(self):
-        pass
+        self.finish()
+
+        values = json.loads(self.request.body)
+        values = values['values']
+        print values
+
+        datas = []
+        for value in values:
+            data = json.dumps({"id": 0, "value": value})
+            datas.append(data)
+
+        for c in cl:
+            c.write_message(json.dumps(datas))
+
 
 class ApiHandler2(web.RequestHandler):
 
@@ -85,13 +98,22 @@ class ApiHandler2(web.RequestHandler):
         datas = []
         for value in values:
             datas.append(json.dumps({"id": 0, "value": value}))
-        data = json.dumps(datas)
         for c in cl:
-            c.write_message(data)
+            c.write_message(json.dumps(datas))
 
     @web.asynchronous
     def post(self):
-        pass
+        self.finish()
+
+        values = json.loads(self.request.body)
+
+        datas = []
+        for value in values['values']:
+            data = json.dumps({"id": 0, "value": value})
+            datas.append(data)
+
+        for c in cl:
+            c.write_message(json.dumps(datas))
 
 app = web.Application([
     (r'/', IndexHandler),
