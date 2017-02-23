@@ -123,6 +123,7 @@ app = web.Application([
     (r'/api2', ApiHandler2),
 ])
 
+
 def usage():
     print(
         '-h --help\tThis screen\n'

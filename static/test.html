@@ -136,7 +136,8 @@
                     },
                     plotOptions: {
                         series: {
-                            stacking: ''
+                            stacking: '',
+                            animation: false
                         }
                     },
                     series: $scope.chartSeries,
@@ -151,9 +152,9 @@
                 $scope.chartConfig3.title.text = 'Last 100 Batches';
 
 
-                $scope.reflow = function () {
+                /*$scope.reflow = function () {
                     $scope.$broadcast('highchartsng.reflow');
-                };
+                };*/
             });
 </script>
 </body>
