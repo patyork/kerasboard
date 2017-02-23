@@ -45,12 +45,12 @@ class SocketHandler(websocket.WebSocketHandler):
             cl.append(self)
 
             c = conn.cursor()
-            datas = []
-            for row in c.execute('SELECT * FROM stocks order by 1'):
-                data = json.dumps({"id": row[0], "value": row[1]})
-                datas.append(data)
+            #datas = []
+            #for row in c.execute('SELECT * FROM stocks order by 1'):
+            #    data = json.dumps({"id": row[0], "value": row[1]})
+            #    datas.append(data)
 
-            self.write_message(json.dumps(datas))
+            #self.write_message(json.dumps(datas))
 
 
 
