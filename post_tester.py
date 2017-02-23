@@ -27,7 +27,11 @@ if __name__ == '__main__':
 
     id = 50
     while True:
-        r = requests.get('http://localhost:%i/api' % port, params={'id': id, 'value': np.random.random() * 1000})
-        time.sleep(delay)
+        try:
+            r = requests.get('http://localhost:%s/api' % port, params={'id': id, 'value': np.random.random() * 1000})
+            time.sleep(delay)
+        except requests.ConnectionError:
+            time.sleep(delay*5)
+
         id += 1
 
