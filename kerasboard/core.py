@@ -1,24 +1,26 @@
 from keras import callbacks
 import time
 import requests
+import numpy as np
 
 
-class LossHistory(callbacks.Callback):
-    def __init__(self, timing_duration=2.0, updates_per_second=5, port=8889):
-        super(LossHistory, self).__init__()
+class KerasBoardClient(callbacks.Callback):
+    def __init__(self, timing_duration=2.0, updates_per_second=5, url='http://localhost:8889/api2'):
+        super(KerasBoardClient, self).__init__()
+
         self.timing_duration = timing_duration
         self.target_updates_per_second = updates_per_second
-        self.batches_per_update = 1.0
+        self.url = url
 
+        # Internal statistics to send more data in each write/POST
         self.in_fit_mode = True
         self.batches_per_second = 0.0
         self.in_fit_mode_start = None
+        self.batches_per_update = 1.0
 
+        # Data Queue
         self.batches_in_queue = 0
         self.data_queue = []
-
-        self.port = port
-        self.url = 'http://localhost:%s/api2' % self.port
 
     def _send_data(self):
         r = requests.post(self.url, json={'values': self.data_queue})

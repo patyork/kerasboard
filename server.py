@@ -1,13 +1,13 @@
 from tornado import websocket, web, ioloop
 import json
 import numpy as np
-import sys, getopt
+import sys
+import getopt
 
 import sqlite3
 conn = sqlite3.connect(':memory:')
 
 cl = []
-
 
 tmp_index = 0
 
@@ -51,8 +51,6 @@ class SocketHandler(websocket.WebSocketHandler):
             #    datas.append(data)
 
             #self.write_message(json.dumps(datas))
-
-
 
 
     def on_close(self):
