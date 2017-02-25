@@ -16,9 +16,9 @@
 <div>
     <div>{{chartConfig.getChartObj().chartHeight}}</div>
 
-    <highchart id="chart1" config="chartConfig" class="span9" ></highchart>
-    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart>
-    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart>
+    <highchart id="chart1" config="chartConfig" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
 
 </div>
 <script>
@@ -73,6 +73,12 @@
             })
             .controller('SomeController', function ($scope, MyData) {
                 $scope.MyData = MyData;
+
+                // Ugly, but required in Chrome to prevent WebSocket message dropping in priority
+                window.onwheel = function(){
+                    window.scrollBy(0, window.event.deltaY *.5);
+                    return false;   // capture
+                };
 
                 function clone(obj) {
                     var copy;

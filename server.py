@@ -86,7 +86,7 @@ class ApiHandler(web.RequestHandler):
 
         values = json.loads(self.request.body)
         values = values['values']
-        print values
+        #print values
 
         datas = []
         for value in values:
