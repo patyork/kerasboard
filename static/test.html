@@ -27,7 +27,7 @@
         'highcharts-ng'])
             .factory('MyData', function($websocket) {
                 // Open a WebSocket connection
-                var dataStream = $websocket('ws://' + window.location.host + '/ws');
+                var dataStream = $websocket('ws://' + window.location.host + '/ws'); // + '/id=2&test=5'
 
                 var collection = [];
                 var datum = {labels: [], values:[]};
