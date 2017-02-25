@@ -9,7 +9,7 @@ def usage():
 
 if __name__ == '__main__':
     port = 8888
-    delay = 1000
+    delay = 200.
     type = 'POST'
 
     argv = sys.argv[1:]
@@ -34,7 +34,7 @@ if __name__ == '__main__':
                 r = requests.post('http://localhost:%s/api' % port, json={'values': [0.12, 0.23, np.random.random()]})
             else:
                 r = requests.get('http://localhost:%s/api' % port, params={'id': id, 'value': np.random.random() * 1000})
-            time.sleep(delay / 1000)
+            time.sleep(delay / 1000.)
         except requests.ConnectionError:
             time.sleep(delay*5. / 1000.)
 

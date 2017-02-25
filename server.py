@@ -8,6 +8,11 @@ import socket
 import sqlite3
 conn = sqlite3.connect(':memory:')
 
+try:
+    import urllib.parse as urlparse
+except ImportError:
+    import urlparse
+
 cl = []
 
 tmp_index = 0
@@ -41,7 +46,12 @@ class SocketHandler(websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True
 
-    def open(self):
+    def open(self, *args, **kwargs):
+        get_params = None       # {'model': 7, etc...}
+        if len(args) == 1 and len(args[0]) > 0:
+            params = args[0].replace('/', '').strip()
+            get_params = dict((k.strip(), v.strip()) for k,v in (item.split('=') for item in params.split('&')))
+
         if self not in cl:
             cl.append(self)
 
@@ -76,7 +86,7 @@ class ApiHandler(web.RequestHandler):
 
         values = json.loads(self.request.body)
         values = values['values']
-        print values
+        #print values
 
         datas = []
         for value in values:
@@ -118,7 +128,7 @@ app = web.Application([
     (r'/', IndexHandler),
     (r"/(.*\.html)", web.StaticFileHandler, dict(path='./static/')),
     (r"/lib/(.*\.(js|map|css))", web.StaticFileHandler, dict(path='./static/lib/')),
-    (r'/ws', SocketHandler),
+    (r'/ws(.*)', SocketHandler),
     (r'/api', ApiHandler),
     (r'/api2', ApiHandler2),
 ])
