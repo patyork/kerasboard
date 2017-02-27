@@ -8,6 +8,8 @@
     <script src="lib/jquery-ui.min.js"></script>
     <script src="lib/lodash.min.js"></script>
     <script src="lib/highcharts.js"></script>
+    <script src="lib/exporting.js"></script>
+    <script src="lib/offline-exporting.js"></script>
     <script src="lib/gridstack.min.js"></script>
 
     <script src="lib/angular.min.js"></script>
@@ -259,7 +261,18 @@
                     {"name": "Metric", "data": [], connectNulls: true, id: 'metric'},
                 ];
                 $scope.chartConfig = {
-
+                    exporting: {
+                        chartOptions: { // specific options for the exported image
+                            plotOptions: {
+                                series: {
+                                    dataLabels: {
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        },
+                        fallbackToExportServer: false
+                    },
                     chart: {
                         type: 'line',
                         height: 800,        // Set to a large default value; will change to Gridstack container size.
