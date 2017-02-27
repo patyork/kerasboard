@@ -2,29 +2,80 @@
 <html>
 <head>
     <title>tornado WebSocket example</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="lib/jquery-3.1.1.min.js"></script>
+    <script src="lib/jquery-ui.min.js"></script>
+    <script src="lib/lodash.min.js"></script>
+    <script src="lib/highcharts.js"></script>
+    <script src="lib/gridstack.min.js"></script>
+
     <script src="lib/angular.min.js"></script>
     <script src="lib/angular-websocket.min.js"></script>
-    <script src="lib/highcharts.js"></script>
+    <script src="lib/gridstack-angular.min.js"></script>
     <script src="lib/highcharts-ng.min.js"></script>
 
     <link rel="stylesheet" href="lib/styles.css" />
+    <link rel="stylesheet" href="lib/gridstack.min.css" />
+
+    <style type="text/css">body {
+        color: #000;
+        font-family: sans-serif;
+        font-size: 13px;
+        text-align: center;
+        font-weight: bold;
+
+        background-color: #fff;
+        margin: 0px;
+        overflow: hidden;
+    }
+    .grid-stack {
+        z-index: 9999;
+        width: 100%;
+        position: static !important;
+    }
+    .grid-stack-item-content {
+        color: #2c3e50;
+        text-align: left;
+        background-color: #dbdbdb;
+        border: dashed #c9c9c9 2px;
+        overflow: hidden !important;
+    }
+    </style>
 
 </head>
 <body ng-app="YOUR_APP" ng-controller="SomeController">
-<div>
-    <div>{{chartConfig.getChartObj().chartHeight}}</div>
 
-    <highchart id="chart1" config="chartConfig" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
-    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
-    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+    <div gridstack-handler="gridstacker" gridstack class="grid-stack" options="options" on-change="onChange(event,items)" on-drag-start="onDragStart(event,ui)" on-drag-stop="onDragStop(event,ui)" on-resize-start="onResizeStart(event,ui)" on-resize-stop="onResizeStop(event,ui)">
+        <div gridstack-item ng-repeat="w in widgets" class="grid-stack-item" gs-item-x="w.x" gs-item-y="w.y"
+             gs-item-width="w.width" gs-item-height="w.height" gs-item-autopos="0" on-item-added="onItemAdded(item)" on-item-removed="onItemRemoved(item)">
+            <div class="grid-stack-item-content">
+                <div ng-if="w.id==='file'">
+                    <highchart id="chart1" config="chartConfig" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+                </div>
 
-</div>
+                <div ng-if="w.id==='engravingSettings'">
+
+                    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+                </div>
+
+                <div ng-if="w.id==='laserSettings'">
+                    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+                </div>
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+
 <script>
     angular.module('YOUR_APP', ['ngWebSocket',
         //'chart.js',
-        'highcharts-ng'])
+        'highcharts-ng', 'gridstack-angular'])
             .factory('MyData', function($websocket) {
                 // Open a WebSocket connection
                 var dataStream = $websocket('ws://' + window.location.host + '/ws'); // + '/id=2&test=5'
@@ -71,7 +122,7 @@
 
                 return methods;
             })
-            .controller('SomeController', function ($scope, MyData) {
+            .controller('SomeController', function ($scope, MyData, $log) {
                 $scope.MyData = MyData;
 
                 // Ugly, but required in Chrome to prevent WebSocket message dropping in priority
@@ -79,6 +130,78 @@
                     window.scrollBy(0, window.event.deltaY *.5);
                     return false;   // capture
                 };
+
+                $scope.options = {
+                    cellHeight: 40,
+                    verticalMargin: 10,
+                    height: 50,
+                    width: 12,
+                    //float: true
+                };
+                $scope.default_widgets = [
+                    { x:0, y:0, width:4, height: 6, id: 'file'},
+                    { x:0, y:6, width:4, height: 6, id: 'engravingSettings'},
+                    { x:0, y:12, width:4, height: 7, id: 'laserSettings'},
+                    { x:0, y:22, width:4, height: 5},
+
+                    { x:10, y:0, width:2, height: 4, id: 'machineSettings'},
+                    { x:10, y:4, width:2, height: 4, id: 'preprocSettings'},
+                    { x:10, y:8, width:2, height: 3, id: 'stats'},
+                    { x:10, y:11, width:2, height: 4, id: 'process'},
+
+                ];
+                $scope.gridstacker = null;
+                if(localStorage.getItem('last_layout')) {
+                    $scope.widgets = angular.fromJson(localStorage.getItem('last_layout'));
+                }
+                else {
+                    $scope.widgets = $scope.default_widgets;
+                }
+                $scope.reset_layout = function() {
+                    $scope.widgets = $scope.default_widgets;
+                    $scope.saveLayout();
+                };
+                $scope.widgets = $scope.default_widgets; //# todo remove
+                $scope.saveLayout = function() {
+                    localStorage.setItem('last_layout', angular.toJson($scope.widgets));
+                };
+                $scope.addWidget = function() {
+                    var newWidget = { x:0, y:0, width:1, height:1 };
+                    $scope.widgets.push(newWidget);
+                };
+                $scope.removeWidget = function(w) {
+                    var index = $scope.widgets.indexOf(w);
+                    $scope.widgets.splice(index, 1);
+                };
+                $scope.onChange = function(event, items) {
+                    $log.log("onChange event: "+event+" items:"+items);
+                };
+                $scope.onDragStart = function(event, ui) {
+                    $log.log("onDragStart event: "+event+" ui:"+ ui);
+                };
+                $scope.onDragStop = function(event, ui) {
+                    $log.log("onDragStop event: "+event+" ui:"+ui);
+                    $scope.saveLayout();
+                };
+                $scope.onResizeStart = function(event, ui) {
+                    $log.log("onResizeStart event: "+event+" ui:"+ui);
+                };
+                $scope.onResizeStop = function(event, ui) {
+                    $log.log("onResizeStop event: "+event+" ui:"+ui);
+                    $scope.saveLayout();
+                    $scope.reflow();
+                    console.log(ui)
+                };
+                $scope.onItemAdded = function(item) {
+                    $log.log("onItemAdded item: "+item);
+                    $scope.saveLayout();
+                };
+                $scope.onItemRemoved = function(item) {
+                    $log.log("onItemRemoved item: "+item);
+                    $scope.saveLayout();
+                };
+
+
 
                 function clone(obj) {
                     var copy;
@@ -139,11 +262,11 @@
                     chart: {
                         type: 'line',
                         height: 300,
+                        animation: false //doesn't actually turn it off, but what can you do. Thought that counts.
                     },
                     plotOptions: {
                         series: {
                             stacking: '',
-                            animation: false
                         }
                     },
                     series: $scope.chartSeries,
@@ -157,10 +280,23 @@
                 $scope.chartConfig3 = clone($scope.chartConfig);
                 $scope.chartConfig3.title.text = 'Last 100 Batches';
 
+                $scope.charts = [$scope.chartConfig, $scope.chartConfig2, $scope.chartConfig3]
 
-                /*$scope.reflow = function () {
-                    $scope.$broadcast('highchartsng.reflow');
-                };*/
+
+                $scope.reflow = function () {
+                    //$scope.$broadcast('highchartsng.reflow');
+                    //$scope.$apply()
+                    //$scope.chartConfig2.chart.reflow()
+
+                    console.log($scope.charts[0])
+
+                    angular.forEach($scope.charts, function(value, key) {
+                        console.log(value.getChartObj().container.parentElement.parentElement.parentElement.clientHeight)
+                        value.chart.height = value.getChartObj().container.parentElement.parentElement.parentElement.clientHeight;
+                        value.chart.width = value.getChartObj().container.parentElement.parentElement.parentElement.clientWidth;
+                        value.getChartObj().reflow()
+                    });
+                };
             });
 </script>
 </body>
