@@ -161,7 +161,7 @@
                     $scope.widgets = $scope.default_widgets;
                     $scope.saveLayout();
                 };
-                $scope.widgets = $scope.default_widgets; //# todo remove
+                //$scope.widgets = $scope.default_widgets; //# todo remove
                 $scope.saveLayout = function() {
                     localStorage.setItem('last_layout', angular.toJson($scope.widgets));
                 };
@@ -175,6 +175,7 @@
                 };
                 $scope.onChange = function(event, items) {
                     $log.log("onChange event: "+event+" items:"+items);
+                    $scope.reflow();
                 };
                 $scope.onDragStart = function(event, ui) {
                     $log.log("onDragStart event: "+event+" ui:"+ ui);
@@ -261,8 +262,8 @@
 
                     chart: {
                         type: 'line',
-                        height: 300,
-                        animation: false //doesn't actually turn it off, but what can you do. Thought that counts.
+                        height: 800,        // Set to a large default value; will change to Gridstack container size.
+                        animation: false    //doesn't actually turn it off, but what can you do. Thought that counts.
                     },
                     plotOptions: {
                         series: {
