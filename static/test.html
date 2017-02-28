@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="kerasboard"  ng-controller="MonitorController">
 <head>
-    <title>tornado WebSocket example</title>
+    <title ng-bind-template="Model {{title}} - KerasBoard">KerasBoard Monitoring</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <script src="lib/jquery-3.1.1.min.js"></script>
@@ -20,34 +20,8 @@
     <link rel="stylesheet" href="lib/styles.css" />
     <link rel="stylesheet" href="lib/gridstack.min.css" />
 
-    <style type="text/css">body {
-        color: #000;
-        font-family: sans-serif;
-        font-size: 13px;
-        text-align: center;
-        font-weight: bold;
-
-        background-color: #fff;
-        margin: 0px;
-        overflow: hidden;
-    }
-    .grid-stack {
-        z-index: 9999;
-        width: 100%;
-        position: static !important;
-    }
-    .grid-stack-item-content {
-        color: #2c3e50;
-        text-align: left;
-        background-color: #dbdbdb;
-        border: dashed #c9c9c9 2px;
-        overflow: hidden !important;
-    }
-    </style>
-
 </head>
-<body ng-app="kerasboard" ng-controller="MonitorController">
-
+<body>
     <div gridstack-handler="gridstacker" gridstack class="grid-stack" options="options" on-change="onChange(event,items)" on-drag-start="onDragStart(event,ui)" on-drag-stop="onDragStop(event,ui)" on-resize-start="onResizeStart(event,ui)" on-resize-stop="onResizeStop(event,ui)">
         <div gridstack-item ng-repeat="w in widgets" class="grid-stack-item" gs-item-x="w.x" gs-item-y="w.y"
              gs-item-width="w.width" gs-item-height="w.height" gs-item-autopos="0" on-item-added="onItemAdded(item)" on-item-removed="onItemRemoved(item)">
@@ -64,11 +38,6 @@
                 <div ng-if="w.id==='laserSettings'">
                     <highchart id="chart3" config="chartConfig3" class="span9" ></highchart><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
                 </div>
-
-
-
-
-
             </div>
         </div>
     </div>
@@ -125,6 +94,9 @@
             .controller('MonitorController', function ($scope, MonitorFactory, $log) {
                 $scope.monitorFactory = MonitorFactory;
 
+
+                $scope.title = 'No Model'
+
                 // Ugly, but required in Chrome to prevent WebSocket message dropping in priority
                 window.onwheel = function(){
                     window.scrollBy(0, window.event.deltaY *.5);
@@ -174,31 +146,23 @@
                     $scope.widgets.splice(index, 1);
                 };
                 $scope.onChange = function(event, items) {
-                    $log.log("onChange event: "+event+" items:"+items);
                     $scope.reflow();
                 };
                 $scope.onDragStart = function(event, ui) {
-                    $log.log("onDragStart event: "+event+" ui:"+ ui);
                 };
                 $scope.onDragStop = function(event, ui) {
-                    $log.log("onDragStop event: "+event+" ui:"+ui);
                     $scope.saveLayout();
                 };
                 $scope.onResizeStart = function(event, ui) {
-                    $log.log("onResizeStart event: "+event+" ui:"+ui);
                 };
                 $scope.onResizeStop = function(event, ui) {
-                    $log.log("onResizeStop event: "+event+" ui:"+ui);
                     $scope.saveLayout();
                     $scope.reflow();
-                    console.log(ui)
                 };
                 $scope.onItemAdded = function(item) {
-                    $log.log("onItemAdded item: "+item);
                     $scope.saveLayout();
                 };
                 $scope.onItemRemoved = function(item) {
-                    $log.log("onItemRemoved item: "+item);
                     $scope.saveLayout();
                 };
 
@@ -206,7 +170,6 @@
 
                 function clone(obj) {
                     var copy;
-
                     // Handle the 3 simple types, and null or undefined
                     if (null == obj || "object" != typeof obj) return obj;
 
@@ -239,7 +202,6 @@
                 }
 
                 $scope.$watch('monitorFactory', function(new_val, old_val){
-
                     // Main
                     var seriesArray = $scope.chartConfig.series;
                     seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val);
@@ -251,9 +213,9 @@
                     // Last
                     var seriesArray = $scope.chartConfig3.series;
                     seriesArray[1].data = seriesArray[1].data.concat(new_val.datum2.val).slice(-100);
-
-
                 }, true);
+
+                
                 $scope.chartSeries = [
                     {"name": "Loss", "data": [], id: 'loss'},
                     {"name": "Metric", "data": [], connectNulls: true, id: 'metric'},
