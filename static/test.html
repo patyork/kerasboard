@@ -46,7 +46,7 @@
     </style>
 
 </head>
-<body ng-app="YOUR_APP" ng-controller="SomeController">
+<body ng-app="kerasboard" ng-controller="MonitorController">
 
     <div gridstack-handler="gridstacker" gridstack class="grid-stack" options="options" on-change="onChange(event,items)" on-drag-start="onDragStart(event,ui)" on-drag-stop="onDragStop(event,ui)" on-resize-start="onResizeStart(event,ui)" on-resize-stop="onResizeStop(event,ui)">
         <div gridstack-item ng-repeat="w in widgets" class="grid-stack-item" gs-item-x="w.x" gs-item-y="w.y"
@@ -75,10 +75,8 @@
 
 
 <script>
-    angular.module('YOUR_APP', ['ngWebSocket',
-        //'chart.js',
-        'highcharts-ng', 'gridstack-angular'])
-            .factory('MyData', function($websocket) {
+    angular.module('kerasboard', ['ngWebSocket', 'highcharts-ng', 'gridstack-angular'])
+            .factory('MonitorFactory', function($websocket) {
                 // Open a WebSocket connection
                 var dataStream = $websocket('ws://' + window.location.host + '/ws'); // + '/id=2&test=5'
 
@@ -124,8 +122,8 @@
 
                 return methods;
             })
-            .controller('SomeController', function ($scope, MyData, $log) {
-                $scope.MyData = MyData;
+            .controller('MonitorController', function ($scope, MonitorFactory, $log) {
+                $scope.monitorFactory = MonitorFactory;
 
                 // Ugly, but required in Chrome to prevent WebSocket message dropping in priority
                 window.onwheel = function(){
@@ -240,7 +238,7 @@
                     throw new Error("Unable to copy obj! Its type isn't supported.");
                 }
 
-                $scope.$watch('MyData', function(new_val, old_val){
+                $scope.$watch('monitorFactory', function(new_val, old_val){
 
                     // Main
                     var seriesArray = $scope.chartConfig.series;
@@ -298,12 +296,6 @@
 
 
                 $scope.reflow = function () {
-                    //$scope.$broadcast('highchartsng.reflow');
-                    //$scope.$apply()
-                    //$scope.chartConfig2.chart.reflow()
-
-                    console.log($scope.charts[0])
-
                     angular.forEach($scope.charts, function(value, key) {
                         console.log(value.getChartObj().container.parentElement.parentElement.parentElement.clientHeight)
                         value.chart.height = value.getChartObj().container.parentElement.parentElement.parentElement.clientHeight;
