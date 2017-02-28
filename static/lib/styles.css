@@ -2,3 +2,27 @@ highchart {
     width: 100%;
     display: block;
 }
+
+body {
+    color: #000;
+    font-family: sans-serif;
+    font-size: 13px;
+    text-align: center;
+    font-weight: bold;
+
+    background-color: #fff;
+    margin: 0px;
+    overflow: hidden;
+}
+.grid-stack {
+    z-index: 9999;
+    width: 100%;
+    position: static !important;
+}
+.grid-stack-item-content {
+    color: #2c3e50;
+    text-align: left;
+    background-color: #dbdbdb;
+    border: dashed #c9c9c9 2px;
+    overflow: hidden !important;
+}

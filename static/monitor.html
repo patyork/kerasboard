@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html ng-app="kerasboard"  ng-controller="MonitorController">
+<head>
+    <title ng-bind-template="Model {{title}} - KerasBoard">KerasBoard Monitoring</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="lib/jquery-3.1.1.min.js"></script>
+    <script src="lib/jquery-ui.min.js"></script>
+    <script src="lib/lodash.min.js"></script>
+    <script src="lib/highcharts.js"></script>
+    <script src="lib/exporting.js"></script>
+    <script src="lib/offline-exporting.js"></script>
+    <script src="lib/gridstack.min.js"></script>
+
+    <script src="lib/angular.min.js"></script>
+    <script src="lib/angular-websocket.min.js"></script>
+    <script src="lib/gridstack-angular.min.js"></script>
+    <script src="lib/highcharts-ng.min.js"></script>
+
+    <script src="lib/app.js"></script>
+    <script src="lib/monitor/monitor.js"></script>
+
+    <link rel="stylesheet" href="lib/styles.css" />
+    <link rel="stylesheet" href="lib/gridstack.min.css" />
+
+</head>
+<body>
+    <div gridstack-handler="gridstacker" gridstack class="grid-stack" options="options" on-change="onChange(event,items)" on-drag-start="onDragStart(event,ui)" on-drag-stop="onDragStop(event,ui)" on-resize-start="onResizeStart(event,ui)" on-resize-stop="onResizeStop(event,ui)">
+        <div gridstack-item ng-repeat="w in widgets" class="grid-stack-item" gs-item-x="w.x" gs-item-y="w.y"
+             gs-item-width="w.width" gs-item-height="w.height" gs-item-autopos="0" on-item-added="onItemAdded(item)" on-item-removed="onItemRemoved(item)">
+            <div class="grid-stack-item-content">
+                <div ng-if="w.id==='file'">
+                    <highchart id="chart1" config="chartConfig" class="span9" ></highchart>
+                </div>
+
+                <div ng-if="w.id==='engravingSettings'">
+
+                    <highchart id="chart2" config="chartConfig2" class="span9" ></highchart>
+                </div>
+
+                <div ng-if="w.id==='laserSettings'">
+                    <highchart id="chart3" config="chartConfig3" class="span9" ></highchart>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
